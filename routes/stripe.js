@@ -1,11 +1,13 @@
-const router = require("express").Router;
-const stripe = require("stripe")(process.env.STRIPE_KEY);
+const router = require("express").Router();
+const stripe = require("stripe")(
+  "sk_test_51LULmeCxYIepcDmTas7qBugk7jK3j5ZmNUTrSQuc1OZA24pxoTmqlBh0bbfoXapbXUdWVbqnF5KnC7r7HwMnwS3d00ksKoKrKG"
+);
 
-router.post("/payment", async (req, res) => {
+router.post("/payment", (req, res) => {
   stripe.charges.create(
     {
       source: req.body.tokenId,
-      aomunt: req.body.amount,
+      amount: req.body.amount,
       currency: "usd",
     },
     (stripeErr, stripeRes) => {
