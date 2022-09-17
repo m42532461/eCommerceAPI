@@ -8,7 +8,12 @@ const jwt = require("jsonwebtoken");
 
 // Register
 router.post("/register", async (req, res) => {
+  if (req.body.password !== req.body.confirmPassword)
+    return res
+      .status(500)
+      .json("The confirm password is not the same with the password");
   const newUser = new User({
+    name: req.body.firstname + " " + req.body.lastname,
     username: req.body.username,
     email: req.body.email,
     password: CryptoJS.AES.encrypt(
@@ -18,7 +23,17 @@ router.post("/register", async (req, res) => {
   });
   try {
     const savedUser = await newUser.save();
-    res.status(201).json(savedUser);
+    const accessToken = jwt.sign(
+      {
+        id: savedUser._id,
+        isAdmin: savedUser.isAdmin,
+      },
+      process.env.JWT_SEC,
+      { expiresIn: "3d" }
+    );
+
+    const { password, ...others } = savedUser._doc;
+    res.status(201).json({ ...others, accessToken });
   } catch (error) {
     res.status(500).json(error);
   }
