@@ -26,6 +26,8 @@ router.post("/register", async (req, res) => {
 
 // Login
 router.post("/login", async (req, res) => {
+  if (!req.body.username || !req.body.password)
+    return res.status(404).json("Empty username or password");
   try {
     const user = await User.findOne({ username: req.body.username });
     !user && res.status(401).json("Wrong credentials");
