@@ -7,6 +7,7 @@ const CryptoJS = require("crypto-js");
 const jwt = require("jsonwebtoken");
 const { json } = require("express");
 const { verifyTokenAndAuthorization } = require("./verifyToken");
+const VerifyCode = require("../models/VerifyCode");
 
 // Register
 router.post("/register", async (req, res) => {
@@ -72,67 +73,20 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/sendmail/:id", verifyTokenAndAuthorization, async (req, res) => {
-  const userId = req.params.id;
+// Certification uuid and verifyCode pair
+router.post("/uuid", async (req, res) => {
+  console.log(`uuid:${req.body.uuid} verifyCode:${req.body.verifyCode}`);
+  if (!req.body.uuid || !req.body.verifyCode)
+    return res.status(404).json("Empty uuid or verifyCode");
   try {
-    const user = await User.findById(userId);
+    const keyValuePair = await VerifyCode.findOne({ uuid: req.body.uuid });
+    (!keyValuePair || keyValuePair.verifyCode !== req.body.verifyCode) &&
+      res.status(404).json("Wrong credentials");
 
-    const nodemailer = require("nodemailer");
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      auth: {
-        user: "m42532461@gmail.com",
-        pass: "pfljiqdmfaimkdfq",
-      },
-    });
-
-    transporter
-      .sendMail({
-        from: "m42532461@gmail.com",
-        to: [user.email, "m42532461@gmail.com"],
-        subject: "Certified Mail",
-        html: "This is a certified mail from nodejs. Please check this http://127.0.0.1:5174/ to certify your account",
-      })
-      .then((info) => {
-        console.log({ info });
-        res.status(200).json("send success");
-      })
-      .catch((error) => {
-        console.error;
-        res.status(500).json(error);
-      });
+    res.status(200).json("You can reset your password now");
   } catch (error) {
     res.status(500).json(error);
   }
-
-  // if (!req.body.username || !req.body.password)
-  //   return res.status(404).json("Empty username or password");
-  // try {
-  //   const user = await User.findOne({ username: req.body.username });
-  //   !user && res.status(401).json("Wrong credentials");
-  //   const hashedPassword = CryptoJS.AES.decrypt(
-  //     user.password,
-  //     process.env.PASS_SEC
-  //   );
-  //   const originalPassword = hashedPassword.toString(CryptoJS.enc.Utf8);
-  //   originalPassword !== req.body.password &&
-  //     res.status(401).json("Wrong credentials");
-
-  //   const accessToken = jwt.sign(
-  //     {
-  //       id: user._id,
-  //       isAdmin: user.isAdmin,
-  //     },
-  //     process.env.JWT_SEC,
-  //     { expiresIn: "3d" }
-  //   );
-
-  //   const { password, ...others } = user._doc;
-  //   res.status(200).json({ ...others, accessToken });
-  // } catch (error) {
-  //   res.status(500).json(error);
-  // }
 });
 
 module.exports = router;
