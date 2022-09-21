@@ -1,3 +1,4 @@
+const SubscribeList = require("../models/SubscribeList");
 const User = require("../models/User");
 const VerifyCode = require("../models/VerifyCode");
 
@@ -52,6 +53,19 @@ router.post("/certification", async (req, res) => {
       });
   } catch (error) {
     console.log(error);
+    res.status(500).json(error);
+  }
+});
+
+router.post("/subscribe", async (req, res) => {
+  const email = req.body.email;
+  if (!email || !email.includes("@"))
+    return res.status(500).json("Wrong email format");
+  try {
+    const list = new SubscribeList({ email });
+    const savedSubscriber = await list.save();
+    res.status(200).json(savedSubscriber);
+  } catch (error) {
     res.status(500).json(error);
   }
 });

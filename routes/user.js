@@ -7,7 +7,7 @@ const {
 
 const router = require("express").Router();
 
-// UPDATE
+// UPDATE USER INFO
 router.put("/:id", verifyTokenAndAuthorization, async (req, res) => {
   if (req.body.password) {
     req.body.password = CryptoJS.AES.encrypt(
@@ -18,6 +18,35 @@ router.put("/:id", verifyTokenAndAuthorization, async (req, res) => {
   try {
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json(error);
+  }
+});
+
+// RESET PASSWORD
+router.put("/reset/:username", async (req, res) => {
+  if (
+    !req.body.password ||
+    !req.body.confirmPassword ||
+    req.body.password !== req.body.confirmPassword
+  )
+    return res
+      .status(500)
+      .json("Please check password and confirmPassword again!");
+
+  const password = CryptoJS.AES.encrypt(
+    req.body.password,
+    process.env.PASS_SEC
+  ).toString();
+  req.body = { password: password };
+
+  try {
+    const updatedUser = await User.findOneAndUpdate(
+      { username: req.params.username },
       { $set: req.body },
       { new: true }
     );
