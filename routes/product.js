@@ -57,19 +57,50 @@ router.get("/find/:id", async (req, res) => {
 router.get("/", async (req, res) => {
   const qNew = req.query.new;
   const qCategory = req.query.category;
+  const qPage = req.query.page;
+  const qSort = req.query.sort;
+  console.log(qSort);
   try {
     let products;
-
+    let sortRule;
+    const LIMIT = 8;
+    const startIndex = (Number(qPage) - 1) * LIMIT;
+    const total = await Product.countDocuments({});
+    const sort = async (s) => {
+      switch (s) {
+        case "desc":
+          sortRule = { price: -1 };
+          return;
+        case "asc":
+          sortRule = { price: 1 };
+          return;
+        default:
+          sortRule = { createdAt: -1 };
+          return;
+      }
+    };
+    sort(qSort);
     if (qNew) {
-      products = await Product.find().sort({ createdAt: -1 }).limit(5);
+      products = await Product.find().sort(sortRule).limit(8);
     } else if (qCategory) {
-      products = await Product.find({ categories: { $in: [qCategory] } });
+      products = await Product.find({ categories: { $in: [qCategory] } })
+        .sort(sortRule)
+        .limit(LIMIT)
+        .skip(startIndex);
+      console.log(products);
     } else {
-      products = await Product.find();
+      products = await Product.find()
+        .sort(sortRule)
+        .limit(LIMIT)
+        .skip(startIndex);
     }
-    res.status(200).json(products);
+    res.status(200).json({
+      data: products,
+      currentPage: Number(qPage),
+      numberOfPages: Math.ceil(total / LIMIT),
+    });
   } catch (error) {
-    res.status(500).json(error);
+    res.status(500).json({ message: error.message });
   }
 });
 
