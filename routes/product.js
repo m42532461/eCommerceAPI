@@ -97,7 +97,7 @@ router.get("/", async (req, res) => {
     res.status(200).json({
       data: products,
       currentPage: Number(qPage),
-      numberOfPages: Math.ceil(total / LIMIT),
+      numberOfPages: Math.ceil(products.length / LIMIT),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
