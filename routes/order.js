@@ -9,6 +9,8 @@ const {
 
 // CREATE
 router.post("/", verifyToken, async (req, res) => {
+  console.log(req.body);
+  console.log(req.user);
   const newOrder = new Order(req.body);
 
   try {
